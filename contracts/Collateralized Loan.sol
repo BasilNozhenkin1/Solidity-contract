@@ -17,7 +17,8 @@ contract CollateralizedLoan {
 
     // Create a mapping to manage the loans
     mapping(uint => Loan) public loans;
-    uint public nextLoanId = 1;
+    //starting from 0 now
+    uint public nextLoanId = 0;
   
   
     // Hint: Define events for loan requested, funded, repaid, and collateral claimed
@@ -27,22 +28,19 @@ contract CollateralizedLoan {
     event CollateralClaimed(uint loanId, address lender);
     // Custom Modifiers
     // Hint: Write a modifier to check if a loan exists
-    modifier loanExists(uint _loanId) {
-        require(_loanId > 0 && _loanId < nextLoanId , "loanId is not correct");
+    
+    modifier validLoan(uint _loanId) {
+        //now it starts from 0 so we need to change it
+        require( _loanId < nextLoanId, "Loan does not exist");
         _;
     }
     // Hint: Write a modifier to ensure a loan is not already funded
     modifier loanIsNotFunded(uint _loanId) {
-        require(!loans[_loanId].isFunded , "Loan is not funded");
+        require(!loans[_loanId].isFunded , "Loan is already funded");
         _;
     }
     modifier loanFunded(uint _loanId) {
-        require(loans[_loanId].isFunded, "Loan is funded");
-        _;
-    }
-
-    modifier validLoan(uint _loanId) {
-        require(_loanId > 0 && _loanId < nextLoanId, "Loan does not exist");
+        require(loans[_loanId].isFunded, "Loan is not funded yet");
         _;
     }
 
@@ -97,8 +95,11 @@ contract CollateralizedLoan {
   
     // Function to fund a loan
     // Hint: Write the fundLoan function with necessary checks and logic
-    function fundLoad(uint _loanId) public payable {
-        require(_loanId > 0 && _loanId < nextLoanId, "Loan does not exist");
+    //fixed typo
+    function fundLoan(uint _loanId) public payable  
+        validLoan(_loanId)
+        loanIsNotFunded(_loanId) {
+
         Loan storage loan = loans[_loanId];
         require(msg.value >= loan.loanAmount, "Insufficient amount of funds for loan");
         loan.lender = msg.sender;
@@ -111,15 +112,16 @@ contract CollateralizedLoan {
 
     // Function to repay a loan
     // Hint: Write the repayLoan function with necessary checks and logic
-    function repayLoan(uint _loanId) public payable {
-        require(_loanId > 0 && _loanId < nextLoanId, "Loan does not exist");
-        
+    function repayLoan(uint _loanId) public payable 
+        validLoan(_loanId)
+        loanIsNotFunded(_loanId)
+        notRepaid(_loanId) {
         Loan storage loan = loans[_loanId];
 
         uint interestAmount = (loan.loanAmount * loan.interestRate) / 100;
         uint totalRepayment = loan.loanAmount + interestAmount;
-        
-        require(msg.value > totalRepayment, "Insufficient amount to repay loan");
+        //we should be able pay the required price, so yes = taken into account
+        require(msg.value >= totalRepayment, "Insufficient amount to repay loan");
 
         loan.isRepaid = true;
 
@@ -147,7 +149,6 @@ contract CollateralizedLoan {
     }
     
     function getLoanCount() public view returns (uint) {
-        //nextLoanId starts with 1
-        return nextLoanId - 1; 
+        return nextLoanId; 
     }
 }

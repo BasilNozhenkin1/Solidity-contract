@@ -27,7 +27,7 @@ describe("CollateralizedLoan", function () {
         value: collateralAmount
       });
       //first loan
-      const loanId = 1;
+      const loanId = 0;
       const loan = await collateralizedLoan.loans(loanId);
       expect(loan.borrower).to.equal(borrower.address);
       expect(loan.collateralAmount.toString()).to.equal(collateralAmount.toString());
@@ -52,12 +52,12 @@ describe("CollateralizedLoan", function () {
           value: collateralAmount,
         });
       
-      const loanId = 1;
+      const loanId = 0;
       const loanData = await collateralizedLoan.loans(loanId);
 
       await collateralizedLoan
       .connect(lender)
-      .fundLoad(loanId, 
+      .fundLoan(loanId, 
         { 
           value: loanData.loanAmount 
         }
@@ -84,7 +84,7 @@ describe("CollateralizedLoan", function () {
           value: collateralAmount,
         });
 
-      const loanId = 1;
+      const loanId = 0;
       const loanData = await collateralizedLoan.loans(loanId);
       const interest = (loanData.loanAmount * loanData.interestRate) / 100n;
       const totalRepayment = loanData.loanAmount + interest;
@@ -115,13 +115,13 @@ describe("CollateralizedLoan", function () {
           value: collateralAmount,
         });
 
-      const loanId = 1;
+      const loanId = 0;
       const loanData = await collateralizedLoan.loans(loanId);
 
       //lender funds
       await collateralizedLoan
       .connect(lender)
-      .fundLoad(loanId, {
+      .fundLoan(loanId, {
         value: loanData.loanAmount,
       });
 
